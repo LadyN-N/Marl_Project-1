@@ -1,0 +1,52 @@
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: marl-deployment
+  labels:
+    app: marl-1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: marl-1
+  template: # Used to create pods. When pods are created, give this label to them, which are recognized by the replicaset
+    metadata:
+      labels:
+        app: marl-1
+    spec:
+      containers:
+      - name: coffeeshop
+        image: ladyn7/marl_project-1:v1
+        ports:
+        - containerPort: 80
+      imagePullSecrets:
+        - name: dockerhubsecret
+  strategy:                # This defines the update strategy for the Deployment.
+    type: RollingUpdate    # This strategy replaces Pods incrementally, while maintaining availability.
+    rollingUpdate:
+      maxUnavailable: 1  # Max number of Pods to terminate at any time during update (you can use percentages here i.e. 25%)
+      maxSurge: 1        # Max number of Pods to add or create at a time during update (you can use percentages here i.e. 25%)
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: marl-lb-service 
+  annotations:
+   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+   service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+   service.beta.kubernetes.io/aws-load-balancer-target-type: "instance"
+   service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: "TCP"  # could be deleted from this file
+   service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "traffic-port" # could be deleted from this file
+spec:
+  selector:
+    app: marl-1 # This service will identify pods with this label (should match label on line 17 above) - labels given to the pods
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+  externalTrafficPolicy: Local  # [Only 2 options: Local (sends traffic to nodes with pods runing in them; OR Cluster (doesn't matter if pod is running or not - redirects traffic if pod is not running)]
