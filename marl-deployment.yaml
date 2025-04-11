@@ -15,7 +15,7 @@ spec:
     metadata:
       labels:
         app: marl-1
-    spec:
+    spec: # Pod
       containers:
       - name: coffeeshop
         image: ladyn7/marl_project-1:v1
@@ -23,6 +23,31 @@ spec:
         - containerPort: 80
       imagePullSecrets:
         - name: dockerhubsecret
+      tolerations:
+      - key: "marl-deployment"
+        operator: "Equal"
+        value: "True"
+        effect: "NoSchedule"
+        #tolerationSeconds: 60  ==> Works only with NoExecute
+      nodeSelector:
+        marl-deployment: "True"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: marl-deployment
+                operator: In
+                values:
+                - "True"
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: GPU
+                operator: In
+                values:
+                - "True"
   strategy:                # This defines the update strategy for the Deployment.
     type: RollingUpdate    # This strategy replaces Pods incrementally, while maintaining availability.
     rollingUpdate:

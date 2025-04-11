@@ -1,0 +1,18 @@
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+  --set clusterName=kubernetes \
+  --set region=us-east-1 \
+  --set vpcId=vpc-0581878aafdef68bd \
+  --set serviceAccount.create=true \
+  --set image.repository=public.ecr.aws/eks/aws-load-balancer-controller \
+  -n kube-system
+
+
+  kubectl patch node ip-172-31-22-180.ec2.internal -p '{"spec":{"providerID":"aws:///us-east-1a/i-08285e840987b8943"}}'
+  kubectl patch node worker-node-1 -p '{"spec":{"providerID":"aws:///us-east-1a/i-08285e840987b8943"}}'
+
+  kubectl patch node worker-node-2 -p '{"spec":{"providerID":"aws:///us-east-1a/i-09e2fbdd73cbd67b9"}}'
+
+
+kubectl label node worker-node-1 node-role.kubernetes.io/node=
+
+kubectl label node worker-node-2 node-role.kubernetes.io/node=
